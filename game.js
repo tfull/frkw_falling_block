@@ -11,13 +11,12 @@
     const HEIGHT_D = 8;
     const MODES = { title: 0, game: 1, pause: 2, over: 3, clear: 4 };
 
-    const COLORS = ["#ffff00","#00ffff","#00ff00","#ff0000","#0000ff","#ff8000","#800080","#ff00ff"];
+    // const COLORS = ["#ffff00","#00ffff","#00ff00","#ff0000","#0000ff","#ff8000","#800080","#ff00ff"];
 
     const EASY = {
         name: "Easy",
         speed: [ 48, 36, 24, 16, 12, 10, 8 ],
-        //goal: [ 10000, 20000, 30000, 50000, 70000, 100000, 150000 ],
-        goal: [ 100, 200, 300, 400, 500, 600, 700 ],
+        goal: [ 10000, 20000, 30000, 50000, 70000, 100000, 150000 ],
         frkw_p: 2,
         help_p: 2,
     };
@@ -39,7 +38,7 @@
         name: "古川",
         speed: [ 12, 10, 6, 4, 3, 2 ],
         goal: [ 40000, 80000, 160000, 320000, 640000, 1280000 ],
-        frkw_p: 5,
+        frkw_p: 12,
         help_p: 0,
     };
 
@@ -59,6 +58,8 @@
         }
     }
 
+    /*
+
     function format(d, n){
         var s = "";
         do{
@@ -73,6 +74,7 @@
 
         return s;
     }
+    */
 
     function initGame(gamev, key){
         gamev.field = [];
@@ -289,9 +291,10 @@
         return key.space();
     }
 
+    /*
+
     function makeTitleScene(){
         var scene = new Scene();
-        var label = new Label("Furukawa Block Game");
         scene.backgroundColor = "#000000";
         return scene;
     }
@@ -321,6 +324,7 @@
         label.color = "#ff0000";
         scene.addChild(label);
     }
+    */
 
     function gameLoop(gamev, key){
         gamev.flame_count --;
@@ -347,10 +351,28 @@
             }
         }
 
+        function f(gamev, key){
+            gamev.block.y -= 1;
+            lock(gamev);
+            supplyBlock(gamev);
+            key.reset();
+            if(deletable(gamev)){
+                gamev.mode = 1;
+            }else if(checkOver(gamev)){
+                gamev.mode = 2;
+            }else if(checkLevelUp(gamev)){
+                if(levelUp(gamev, key)){
+                    gamev.mode = 3;
+                }
+            }
+        }
+
         if(key.down()){
             block.y += 1;
             gamev.flame_count = gamev.difficulty.speed[gamev.level];
             if(collision(gamev)){
+                f(gamev, key);
+                /*
                 block.y -= 1;
                 lock(gamev);
                 supplyBlock(gamev);
@@ -362,6 +384,7 @@
                         gamev.mode = 2; // over
                     }
                 }
+                */
             }else{
                 gamev.score ++;
             }
@@ -383,21 +406,38 @@
             gamev.flame_count = gamev.difficulty.speed[gamev.level];
             block.y += 1;
             if(collision(gamev)){
+                f(gamev, key);
+                /*
                 block.y -= 1;
                 lock(gamev);
                 supplyBlock(gamev);
                 key.reset();
                 if(deletable(gamev)){
                     gamev.mode = 1; // delete
-                }else{
-                    if(checkOver(gamev)){
-                        gamev.mode = 2; // over
+                }else if(checkOver(gamev)){
+                    gamev.mode = 2; // over
+                }else if(checkLevelUp(gamev)){
+                    if(levelUp(gamev)){
+                        gamev.mode == 3; // clear
                     }
                 }
+                */
             }
         }
     }
 
+    function levelUp(gamev, key){
+        gamev.level ++;
+
+        if(gamev.level < gamev.difficulty.goal.length){
+            key.setInterval(flameToInterval(gamev.difficulty.speed[gamev.level]));
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    /*
     function makeLabel(s, x, y, c){
         var label = new Label(s);
         label.x = x;
@@ -405,7 +445,9 @@
         label.color = c;
         return label;
     }
+    */
 
+    /*
     function showGame(scene, gamev, assets){
         while(scene.firstChild){
             scene.removeChild(scene.firstChild);
@@ -496,6 +538,9 @@
             }
         }
     }
+    */
+
+    /*
 
     function showDeleteEffect(scene, gamev, assets){
         for(var i = 0; i < gamev.height; i++){
@@ -516,7 +561,9 @@
             }
         }
     }
+    */
 
+    /*
     function showGameOver(scene, gamev, assets){
         showGame(scene, gamev, assets);
         var label = new Label("Game Over");
@@ -534,11 +581,13 @@
         label.color = "#ffffff";
         scene.addChild(label);
     }
+    */
 
     function gameOverLoop(gamev, key){
         return key.space();
     }
 
+    /*
     function makeGameScene(){
         var scene = new Scene();
         scene.backgroundColor = "black";
@@ -550,16 +599,19 @@
         scene.backgroundColor = "#000000";
         return scene;
     }
+    */
 
     function checkLevelUp(gamev){
         return gamev.score > gamev.difficulty.goal[gamev.level];
     }
 
+    /*
     function makeClearScene(){
         var scene = new Scene();
         scene.backgroundColor = "#000000";
         return scene;
     }
+    */
 
     function gameClearLoop(gamev, key){
         return key.space();
@@ -574,8 +626,9 @@
         var titlev = { difficulty: 0 };
         var gamev = { flame_count: 0, line: 0, score: 0, field: undefined, block: undefined, nexts: [], frkw_p: 3, help_p: 18, width: WIDTH, height: HEIGHT, height_d: HEIGHT_D, mode: 0, level: 0, speed: undefined, difficulty: 0 };
         var delete_mode_count = 0;
-        var scenes = { title: makeTitleScene(), game: makeGameScene() , over: makeOverScene(), clear: makeClearScene() };
+        var scenes = { title: /*makeTitleScene()*/ new TitleScene(game.assets), game: new GameScene(game.assets)/*makeGameScene()*/ /*, over: makeOverScene(), clear: makeClearScene() */};
         var mode = MODES.title;
+        scenes.title.initialize(titlev, DIFFICULTY);
 
         game.onload = function(){
             game.addEventListener('enterframe', function(){
@@ -587,22 +640,31 @@
                     if(titleLoop(titlev, key)){
                         gamev.difficulty = DIFFICULTY[titlev.difficulty];
                         initGame(gamev, key);
+                        scenes.game.initialize(gamev);
                         delete_mode_count = 0;
                         mode = MODES.game;
                     }
-                    showTitle(scenes.title, titlev);
-                    game.pushScene(scenes.title);
+                    // showTitle(scenes.title, titlev);
+                    scenes.title.read(titlev);
+                    game.pushScene(scenes.title.getScene());
                 }else if(mode == MODES.game){
                     if(gamev.mode == 0){
                         gameLoop(gamev, key);
-                        if(gamev.mode == 2){
+                        if(gamev.mode == 2){ // over
                             mode = MODES.over;
+                            scenes.game.over(gamev);
+                        }else if(gamev.mode == 3){ // clear
+                            mode = MODES.clear;
+                            scenes.game.clear(gamev);
+                        }else if(gamev.mode == 4){ // level up
                         }
-                        showGame(scenes.game, gamev, game.assets);
-                        game.pushScene(scenes.game);
+                        //showGame(scenes.game, gamev, game.assets);
+                        scenes.game.read(gamev);
+                        game.pushScene(scenes.game.getScene());
                     }else{
                         if(delete_mode_count <= 0){
                             delete_mode_count = gamev.difficulty.speed[gamev.level];
+                            scenes.game.deleteStart(gamev);
                         }else{
                             if(key._down > 0){
                                 delete_mode_count -= 2;
@@ -616,24 +678,32 @@
                             var lines = deleteBlocks(gamev);
                             gamev.score += Math.pow(lines, 2) * 100;
                             gamev.line += lines;
+                            scenes.game.deleteEnd(gamev);
                             if(checkLevelUp(gamev)){
+                                levelUp(gamev, key);
+                                /*
                                 gamev.level ++;
                                 if(gamev.level < gamev.difficulty.goal.length){
                                     key.setInterval(flameToInterval(gamev.difficulty.speed[gamev.level]));
                                 }
+                                */
                             }
                             if(checkOver(gamev)){
                                 key.reset();
                                 mode = MODES.over;
+                                scenes.game.read(gamev);
+                                scenes.game.over(gamev);
                             }else if(gamev.level >= gamev.difficulty.goal.length){
                                 key.reset();
                                 mode = MODES.clear;
+                                scenes.game.read(gamev);
+                                scenes.game.clear(gamev);
                             }
                         }
 
-                        showGame(scenes.game, gamev, game.assets);
-                        showDeleteEffect(scenes.game, gamev, game.assets);
-                        game.pushScene(scenes.game);
+                        // showGame(scenes.game, gamev, game.assets);
+                        // showDeleteEffect(scenes.game, gamev, game.assets);
+                        game.pushScene(scenes.game.getScene());
                     }
                 }else if(mode == MODES.pause){
 
@@ -641,14 +711,14 @@
                     if(gameOverLoop(gamev, key)){
                         mode = MODES.title;
                     }
-                    showGameOver(scenes.over, gamev, game.assets);
-                    game.pushScene(scenes.over);
+                    // showGameOver(scenes.over, gamev, game.assets);
+                    game.pushScene(scenes.game.getScene());
                 }else if(mode == MODES.clear){
                     if(gameClearLoop(gamev, key)){
                         mode = MODES.title;
                     }
-                    showGameClear(scenes.clear, gamev, game.assets);
-                    game.pushScene(scenes.clear);
+                    // showGameClear(scenes.clear, gamev, game.assets);
+                    game.pushScene(scenes.game.getScene());
                 }
             });
         }
