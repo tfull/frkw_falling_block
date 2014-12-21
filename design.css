@@ -14,3 +14,22 @@ h1{
     margin: 0px;
     padding: 0px;
 }
+
+#whole{
+    width: 800px;
+    padding: 5px;
+    margin: 0px auto;
+}
+
+#game{
+    width: 800px;
+    height: 600px;
+    margin: 0px;
+    padding: 0px;
+}
+
+#explain{
+    width: 780px;
+    margin: 0px;
+    padding: 10px;
+}

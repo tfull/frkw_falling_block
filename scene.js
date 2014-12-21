@@ -102,6 +102,10 @@ var GameScene = (function(){
             }
         }
 
+        for(var j = 0; j < gamev.width; j++){
+            this.scene.addChild(makeSprite(25, 25, this.margin_x + j * 25, this.margin_y, this.asset['net.png']));
+        }
+
         this.nexts_field = [];
         this.nexts_board = [];
 

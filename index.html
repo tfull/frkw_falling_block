@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <title>tetris</title>
+    <title>Furukawa Falling Blocks</title>
     <meta charset="UTF-8" />
-    <link ref="stylesheet" href="design.css" type="text/css" />
+    <link rel="stylesheet" href="design.css" type="text/css" />
     <script type="text/javascript" src="enchant.js"></script>
     <script type="text/javascript" src="block.js"></script>
     <script type="text/javascript" src="key.js"></script>
@@ -11,9 +11,29 @@
     <script type="text/javascript" src="game.js"></script>
   </head>
   <body>
-    <div id="enchant-stage"></div>
-    <div>
-      hello world
+    <div id="whole">
+      <div id="game">
+        <div id="enchant-stage"></div>
+      </div>
+      <div id="explain">
+        <h1>古川ブロック落とし</h1>
+        <h2>ゲームの内容</h2>
+        <p>ブロックが落ちてくるので、移動や回転をさせて、ブロックが夫々の行を全て埋めるようにします。</p>
+        <p>稀に「古」や「川」のブロックが落ちてきます。</p>
+        <p>同様に稀で、桃色のブロックが落ちてくる場合があります。これはお助けブロックといい、特殊効果を使えます。効果は下記の通りです。</p>
+        <ul>
+          <li>1*1: 1度のみ使える。そのブロックの列で、且つそれより下の行のうち、ブロックの無い行で一番下の場所にブロックを移動させる。（埋め込み）</li>
+          <li>2*1: 何度でも使える。そのブロックより下の行の同じ列で、最初にブロックと衝突する手前の場所にブロックを新たに追加する。（埋め立て）</li>
+          <li>2*2: 1度のみ使える。そのブロックと同じ列2列の、それより下の行全てのブロックを消去する。（消去ビーム）</li>
+        </ul>
+        <h2>操作方法</h2>
+        <h3>難易度選択画面</h3>
+        <p>カーソルキーの上下で難易度を選択し、スペースキーで開始する。</p>
+        <h3>ゲーム画面</h3>
+        <p>カーソルキーの下と左右でブロックの移動、スペースキーでブロックの回転をさせる。お助けブロックの場合はスペースキーで能力を使う。</p>
+        <h3>ゲーム終了画面</h3>
+        <p>スペースキーでタイトルに戻る。</p>
+      </div>
     </div>
   </body>
 </html>
