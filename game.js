@@ -3,30 +3,61 @@
 (function(){
     enchant();
 
+    const marginx = 25;
+    const marginy = 25;
+
     const WIDTH = 10;
     const HEIGHT = 20;
     const HEIGHT_D = 8;
-    const MODES = { title: 0, game: 1, pause: 2, over: 3 };
-    const DIFFICULTY = { easy: 0, normal: 1, hard: 2, frkw: 3 };
+    const MODES = { title: 0, game: 1, pause: 2, over: 3, clear: 4 };
 
-    COLORS = ["#ffff00","#00ffff","#00ff00","#ff0000","#0000ff","#ff8000","#800080","#ff00ff"];
+    const COLORS = ["#ffff00","#00ffff","#00ff00","#ff0000","#0000ff","#ff8000","#800080","#ff00ff"];
 
     const EASY = {
+        name: "Easy",
         speed: [ 48, 36, 24, 16, 12, 10, 8 ],
-        goal: [ 10000, 20000, 30000, 50000, 70000, 100000, 150000 ],
+        //goal: [ 10000, 20000, 30000, 50000, 70000, 100000, 150000 ],
+        goal: [ 100, 200, 300, 400, 500, 600, 700 ],
+        frkw_p: 2,
+        help_p: 2,
     };
     const NORMAL = {
+        name: "Normal",
         speed: [ 48, 36, 24, 12, 8, 6, 4 ],
         goal: [ 10000, 30000, 60000, 100000, 150000, 210000, 280000 ],
+        frkw_p: 3,
+        help_p: 1,
     };
     const HARD = {
+        name: "Hard",
         speed: [ 24, 16, 12, 10, 8, 6, 4, 3 ],
         goal: [ 20000, 35000, 75000, 120000, 180000, 255000, 345000, 450000 ],
+        frkw_p: 4,
+        help_p: 1,
     };
     const FRKW = {
+        name: "古川",
         speed: [ 12, 10, 6, 4, 3, 2 ],
         goal: [ 40000, 80000, 160000, 320000, 640000, 1280000 ],
+        frkw_p: 5,
+        help_p: 0,
     };
+
+    const DIFFICULTY = [ EASY, NORMAL, HARD, FRKW ];
+
+    function flameToInterval(flame){
+        if(flame > 20){
+            return 5;
+        }else if(flame > 12){
+            return 4;
+        }else if(flame > 6){
+            return 3;
+        }else if(flame > 4){
+            return 2;
+        }else{
+            return 1;
+        }
+    }
 
     function format(d, n){
         var s = "";
@@ -43,7 +74,7 @@
         return s;
     }
 
-    function initGame(gamev){
+    function initGame(gamev, key){
         gamev.field = [];
         for(var i = 0; i < gamev.height_d + gamev.height; i++){
             gamev.field[i] = [];
@@ -52,11 +83,17 @@
             }
         }
 
+        gamev.frkw_p = gamev.difficulty.frkw_p;
+        gamev.help_p = gamev.difficulty.help_p;
+
         gamev.line = 0;
         gamev.score = 0;
         gamev.mode = 0;
         gamev.level = 0;
-        gamev.flame_count = gamev.speeds[gamev.level];
+        gamev.flame_count = gamev.difficulty.speed[gamev.level];
+
+        key.reset();
+        key.setInterval(flameToInterval(gamev.flame_count));
 
         gamev.block = getBlock(gamev.frkw_p, gamev.help_p)
         gamev.nexts = [];
@@ -239,12 +276,12 @@
 
     function titleLoop(titlev, key){
         if(key._up == 1){
-            if(titlev.difficulty > DIFFICULTY.easy){
+            if(titlev.difficulty > 0){
                 titlev.difficulty --;
             }
         }
         if(key._down == 1){
-            if(titlev.difficulty < DIFFICULTY.frkw){
+            if(titlev.difficulty < DIFFICULTY.length - 1){
                 titlev.difficulty ++;
             }
         }
@@ -270,16 +307,15 @@
         label.color = "#ffffff";
         scene.addChild(label);
 
-        var ds = [ "Easy", "Normal", "Hard", "古川" ];
-        for(var i in ds){
-            label = new Label(ds[i]);
+        for(var i in DIFFICULTY){
+            label = new Label(DIFFICULTY[i].name);
             label.x = 150;
             label.y = 200 + i * 25;
             label.color = "#ffffff";
             scene.addChild(label);
         }
 
-        label = new Label("->");
+        label = new Label("=>");
         label.x = 100;
         label.y = 200 + titlev.difficulty * 25;
         label.color = "#ff0000";
@@ -313,7 +349,7 @@
 
         if(key.down()){
             block.y += 1;
-            gamev.flame_count = gamev.speeds[gamev.level];
+            gamev.flame_count = gamev.difficulty.speed[gamev.level];
             if(collision(gamev)){
                 block.y -= 1;
                 lock(gamev);
@@ -344,7 +380,7 @@
         }
 
         if(gamev.flame_count <= 0){
-            gamev.flame_count = gamev.speeds[gamev.level];
+            gamev.flame_count = gamev.difficulty.speed[gamev.level];
             block.y += 1;
             if(collision(gamev)){
                 block.y -= 1;
@@ -362,74 +398,60 @@
         }
     }
 
+    function makeLabel(s, x, y, c){
+        var label = new Label(s);
+        label.x = x;
+        label.y = y;
+        label.color = c;
+        return label;
+    }
+
     function showGame(scene, gamev, assets){
         while(scene.firstChild){
             scene.removeChild(scene.firstChild);
         }
 
-        var label;
-
-        label = new Label(format(10, gamev.score));
-        label.x = 600;
-        label.y = 100;
-        label.color = "#ffff00";
-        scene.addChild(label);
-
-        label = new Label("Score");
-        label.x = 600;
-        label.y = 75;
-        label.color = "#ffffff";
-        scene.addChild(label);
-
-        label = new Label("line");
-        label.x = 600;
-        label.y = 175;
-        label.color = "#ffffff";
-        scene.addChild(label);
-
-        label = new Label(format(10, gamev.line));
-        label.x = 600;
-        label.y = 200;
-        label.color = "#ffff00";
-        scene.addChild(label);
+        scene.addChild(makeLabel("Score", 600, 75, "#ffffff"));
+        scene.addChild(makeLabel(format(10, gamev.score), 600, 100, "#ffff00"));
+        scene.addChild(makeLabel("Line", 600, 175, "#ffffff"));
+        scene.addChild(makeLabel(format(10, gamev.line), 600, 200, "#ffff00"));
+        scene.addChild(makeLabel("Level", 600, 275, "#ffffff"));
+        scene.addChild(makeLabel(String(gamev.level + 1) + " / " + String(gamev.difficulty.speed.length), 600, 300, "#00ff00"));
 
         for(var i = 0; i < gamev.height + 1; i++){
             var sprite = new Sprite(25, 25);
-            sprite.x = 0;
-            sprite.y = i * 25;
+            sprite.x = 0 + marginx;
+            sprite.y = i * 25 + marginy;
             sprite.image = assets["wall.png"];
             scene.addChild(sprite);
 
             sprite = new Sprite(25, 25);
-            sprite.x = (gamev.width + 1) * 25;
-            sprite.y = i * 25;
+            sprite.x = (gamev.width + 1) * 25 + marginx;
+            sprite.y = i * 25 + marginy;
             sprite.image = assets["wall.png"];
             scene.addChild(sprite);
         }
 
         for(var j = 0; j < gamev.width; j++){
             var sprite = new Sprite(25, 25);
-            sprite.x = (j + 1) * 25;
-            sprite.y = gamev.height * 25;
+            sprite.x = (j + 1) * 25 + marginx;
+            sprite.y = gamev.height * 25 + marginy;
             sprite.image = assets["wall.png"];
             scene.addChild(sprite);
         }
 
         for(var i = 0; i < gamev.height; i++){
             for(var j = 0; j < gamev.width; j++){
+                var sprite = new Sprite(25, 25);
+                sprite.x = (j + 1) * 25 + marginx;
+                sprite.y = i * 25 + marginy;
                 if(gamev.field[i + gamev.height_d][j] > 0){
-                    var sprite = new Sprite(25, 25);
-                    sprite.x = (j + 1) * 25;
-                    sprite.y = i * 25;
                     sprite.image = assets["0" + gamev.field[i + gamev.height_d][j] + ".png"];
-                    scene.addChild(sprite);
                 }else{
-                    var sprite = new Sprite(25, 25);
-                    sprite.x = (j + 1) * 25;
-                    sprite.y = i * 25;
                     sprite.image = assets["back.png"];
-                    scene.addChild(sprite);
+
                 }
+                scene.addChild(sprite);
             }
         }
 
@@ -440,16 +462,42 @@
 
                 if(py >= gamev.height_d && gamev.block.data[i][j] > 0){
                     var sprite = new Sprite(25, 25);
-                    sprite.x = (px + 1) * 25;
-                    sprite.y = (py - gamev.height_d) * 25;
+                    sprite.x = (px + 1) * 25 + marginx;
+                    sprite.y = (py - gamev.height_d) * 25 + marginy;
                     sprite.backgroundColor = COLORS[gamev.block.data[i][j] - 1];
+                    scene.addChild(sprite);
+                }
+            }
+        }
+
+        for(var j = 0; j < gamev.width; j++){
+            var sprite = new Sprite(25, 25);
+            sprite.x = (j + 1) * 25 + marginx;
+            sprite.y = marginy;
+            sprite.image = assets['net.png'];
+            scene.addChild(sprite);
+        }
+
+        scene.addChild(makeLabel("Next"), (gamev.width + 3) * 25 + marginx, 0, "#ffffff" );
+
+        for(var h = 0; h < gamev.nexts.length; h++){
+            for(var i = 0; i < gamev.nexts[h].height; i++){
+                for(var j = 0; j < gamev.nexts[h].width; j++){
+                    var sprite = new Sprite(25, 25);
+                    sprite.x = (gamev.width + 3 + j) * 25 + marginx;
+                    sprite.y = (h * gamev.height_d + i) * 25 + marginy;
+                    if(gamev.nexts[h].data[i][j] > 0){
+                        sprite.image = assets['0' + gamev.nexts[h].data[i][j] + '.png'];
+                    }else{
+                        sprite.image = assets['back.png'];
+                    }
                     scene.addChild(sprite);
                 }
             }
         }
     }
 
-    function showDeleteEffect(scene, gamev){
+    function showDeleteEffect(scene, gamev, assets){
         for(var i = 0; i < gamev.height; i++){
             var bury = true;
 
@@ -460,10 +508,11 @@
                 }
             }
             if(bury){
-                var label = new Label("deleted");
-                label.x = 0;
-                label.y = i * 25;
-                scene.addChild(label);
+                var sprite = new Sprite(250, 25);
+                sprite.x = 1 * 25 + marginx;
+                sprite.y = i * 25 + marginy;
+                sprite.image = assets['eraser.png'];
+                scene.addChild(sprite);
             }
         }
     }
@@ -471,6 +520,15 @@
     function showGameOver(scene, gamev, assets){
         showGame(scene, gamev, assets);
         var label = new Label("Game Over");
+        label.x = 400;
+        label.y = 0;
+        label.color = "#ffffff";
+        scene.addChild(label);
+    }
+
+    function showGameClear(scene, gamev, assets){
+        showGame(scene, gamev, assets);
+        var label = new Label("Game Clear");
         label.x = 400;
         label.y = 0;
         label.color = "#ffffff";
@@ -493,17 +551,30 @@
         return scene;
     }
 
+    function checkLevelUp(gamev){
+        return gamev.score > gamev.difficulty.goal[gamev.level];
+    }
+
+    function makeClearScene(){
+        var scene = new Scene();
+        scene.backgroundColor = "#000000";
+        return scene;
+    }
+
+    function gameClearLoop(gamev, key){
+        return key.space();
+    }
+
     window.onload = function(){
         var game = new Game(800, 600);
         var key = new Key(2);
-        game.preload('01.png','02.png','03.png','04.png','05.png','06.png','07.png','08.png','wall.png','back.png');
+        game.preload('01.png','02.png','03.png','04.png','05.png','06.png','07.png','08.png','wall.png','back.png','net.png','eraser.png');
         game.fps = 24;
         game.keybind(32, "space");
-        var ltofc = [ 24, 16, 12, 10, 8, 6, 4 ];
         var titlev = { difficulty: 0 };
-        var gamev = { flame_count: 0, line: 0, score: 0, field: undefined, block: undefined, nexts: [], frkw_p: 3, help_p: 18, width: WIDTH, height: HEIGHT, height_d: HEIGHT_D, mode: 0, level: 0, speeds: ltofc };
+        var gamev = { flame_count: 0, line: 0, score: 0, field: undefined, block: undefined, nexts: [], frkw_p: 3, help_p: 18, width: WIDTH, height: HEIGHT, height_d: HEIGHT_D, mode: 0, level: 0, speed: undefined, difficulty: 0 };
         var delete_mode_count = 0;
-        var scenes = { title: makeTitleScene(), game: makeGameScene() , over: makeOverScene() };
+        var scenes = { title: makeTitleScene(), game: makeGameScene() , over: makeOverScene(), clear: makeClearScene() };
         var mode = MODES.title;
 
         game.onload = function(){
@@ -514,7 +585,8 @@
 
                 if(mode == MODES.title){
                     if(titleLoop(titlev, key)){
-                        initGame(gamev);
+                        gamev.difficulty = DIFFICULTY[titlev.difficulty];
+                        initGame(gamev, key);
                         delete_mode_count = 0;
                         mode = MODES.game;
                     }
@@ -530,9 +602,9 @@
                         game.pushScene(scenes.game);
                     }else{
                         if(delete_mode_count <= 0){
-                            delete_mode_count = gamev.speeds[gamev.level];
+                            delete_mode_count = gamev.difficulty.speed[gamev.level];
                         }else{
-                            if(key.down()){
+                            if(key._down > 0){
                                 delete_mode_count -= 2;
                             }else{
                                 delete_mode_count -= 1;
@@ -544,13 +616,23 @@
                             var lines = deleteBlocks(gamev);
                             gamev.score += Math.pow(lines, 2) * 100;
                             gamev.line += lines;
+                            if(checkLevelUp(gamev)){
+                                gamev.level ++;
+                                if(gamev.level < gamev.difficulty.goal.length){
+                                    key.setInterval(flameToInterval(gamev.difficulty.speed[gamev.level]));
+                                }
+                            }
                             if(checkOver(gamev)){
+                                key.reset();
                                 mode = MODES.over;
+                            }else if(gamev.level >= gamev.difficulty.goal.length){
+                                key.reset();
+                                mode = MODES.clear;
                             }
                         }
 
                         showGame(scenes.game, gamev, game.assets);
-                        showDeleteEffect(scenes.game, gamev);
+                        showDeleteEffect(scenes.game, gamev, game.assets);
                         game.pushScene(scenes.game);
                     }
                 }else if(mode == MODES.pause){
@@ -561,6 +643,12 @@
                     }
                     showGameOver(scenes.over, gamev, game.assets);
                     game.pushScene(scenes.over);
+                }else if(mode == MODES.clear){
+                    if(gameClearLoop(gamev, key)){
+                        mode = MODES.title;
+                    }
+                    showGameClear(scenes.clear, gamev, game.assets);
+                    game.pushScene(scenes.clear);
                 }
             });
         }

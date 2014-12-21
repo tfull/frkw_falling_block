@@ -17,10 +17,32 @@ Key.prototype.scan = function(input){
     if(input.n){ this._n += 1; }else{ this._n = 0; }
 }
 
+Key.prototype.setInterval = function(n){
+    this._interval = n;
+}
+
 Key.prototype.up = function(){ return this._up == 1; }
-Key.prototype.down = function(){ return this._down % this._interval == 1; }
-Key.prototype.left = function(){ return this._left % this._interval == 1 && this._right == 0; }
-Key.prototype.right = function(){ return this._right % this._interval == 1 && this._left == 0; }
+Key.prototype.down = function(){
+    if(this._interval == 1){
+        return this._down > 0;
+    }else{
+        return this._down % this._interval == 1;
+    }
+}
+Key.prototype.left = function(){
+    if(this._interval == 1){
+        return this._left > 0 && this._right == 0;
+    }else{
+        return this._left % this._interval == 1 && this._right == 0;
+    }
+}
+Key.prototype.right = function(){
+    if(this._interval == 1){
+        return this._right > 0 && this._left == 0;
+    }else{
+        return this._right % this._interval == 1 && this._left == 0;
+    }
+}
 Key.prototype.space = function(){ return this._space == 1; }
 
 Key.prototype.reset = function(){
